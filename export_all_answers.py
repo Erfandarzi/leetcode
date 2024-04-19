@@ -3,7 +3,7 @@ import json
 from types import SimpleNamespace
 from weasyprint import HTML
 import openai
-openai.api_key = "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"
+openai.api_key = "sk-eKao0HpVKGuZeRPRJno493820kFJxHRBwJpvMHDCU7BohQpPS"
 import re
 import html
 baseJSON = {
