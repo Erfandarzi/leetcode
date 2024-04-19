@@ -76,7 +76,7 @@ baseJSON = {
 graphQLEndpoint = 'https://leetcode.com/graphql'
 
 htmlstr = '<div>'
-htmlstr += '<style> @page { size: letter landscape; margin: 2cm; } * { word-wrap: break-word; } pre { white-space: pre-wrap; } </style>'
+htmlstr += '<style> @page { size: A4; margin: 2cm; } * { word-wrap: break-word; } pre { white-space: pre-wrap; } </style>'
 
 def update_question_links(question_links):
     with open('question_links.txt') as f:
@@ -127,11 +127,10 @@ def get_question(question_link, index):
     except Exception as e:
         print(f"Exception processing {question_link}: {e}")
 
-
 def main():
     question_links = []
     update_question_links(question_links)
-    index = 1  # Initialize counter for questions
+    index = 1  # Unified index for both sections and questions
 
     if not question_links:
         print("No questions found in the file.")
@@ -139,7 +138,6 @@ def main():
 
     for line in question_links:
         if not line.strip():  # Skip empty lines
-            print(f"Skipping empty line at position {index}")
             continue
 
         try:
@@ -147,8 +145,8 @@ def main():
                 get_section(line, index)
             else:
                 get_question(line, index)
-                index += 1  # Increment the counter for each question
-            print(f"{index}: {line}")
+            index += 1  # Increment index after processing any line, be it a section or a question
+            print(f"Processed {index}: {line}")
             print('------------------------------')
         except Exception as e:
             print(f"Error processing {line}: {str(e)}")
@@ -156,13 +154,12 @@ def main():
     global htmlstr
     htmlstr += '</div>'
 
-    # Try block for PDF generation
+    # Generate the PDF
     try:
         HTML(string=htmlstr).write_pdf('blind_75.pdf')
         print("PDF generated successfully.")
     except Exception as e:
         print(f"Error generating PDF: {str(e)}")
-
 
 if __name__ == '__main__':
     print('\n')
