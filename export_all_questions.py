@@ -8,67 +8,162 @@ baseJSON = {
     "variables": {
         "titleSlug": "PLACEHOLDER"
     },
-    "query": "query questionData($titleSlug: String!) {\n  question(titleSlug: $titleSlug) {\n    questionId\n    questionFrontendId\n    boundTopicId\n    title\n    titleSlug\n    content\n    translatedTitle\n    translatedContent\n    isPaidOnly\n    difficulty\n    likes\n    dislikes\n    isLiked\n    similarQuestions\n    exampleTestcases\n    contributors {\n      username\n      profileUrl\n      avatarUrl\n      __typename\n    }\n    topicTags {\n      name\n      slug\n      translatedName\n      __typename\n    }\n    companyTagStats\n    codeSnippets {\n      lang\n      langSlug\n      code\n      __typename\n    }\n    stats\n    hints\n    solution {\n      id\n      canSeeDetail\n      paidOnly\n      hasVideoSolution\n      paidOnlyVideo\n      __typename\n    }\n    status\n    sampleTestCase\n    metaData\n    judgerAvailable\n    judgeType\n    mysqlSchemas\n    enableRunCode\n    enableTestMode\n    enableDebugger\n    envInfo\n    libraryUrl\n    adminUrl\n    __typename\n  }\n}\n"
+    "query": """
+    query questionData($titleSlug: String!) {
+      question(titleSlug: $titleSlug) {
+        questionId
+        questionFrontendId
+        boundTopicId
+        title
+        titleSlug
+        content
+        translatedTitle
+        translatedContent
+        isPaidOnly
+        difficulty
+        likes
+        dislikes
+        isLiked
+        similarQuestions
+        exampleTestcases
+        contributors {
+          username
+          profileUrl
+          avatarUrl
+          __typename
+        }
+        topicTags {
+          name
+          slug
+          translatedName
+          __typename
+        }
+        companyTagStats
+        codeSnippets {
+          lang
+          langSlug
+          code
+          __typename
+        }
+        stats
+        hints
+        solution {
+          id
+          canSeeDetail
+          paidOnly
+          hasVideoSolution
+          paidOnlyVideo
+          __typename
+        }
+        status
+        sampleTestCase
+        metaData
+        judgerAvailable
+        judgeType
+        mysqlSchemas
+        enableRunCode
+        enableTestMode
+        enableDebugger
+        envInfo
+        libraryUrl
+        adminUrl
+        __typename
+      }
+    }
+    """
 }
 
 graphQLEndpoint = 'https://leetcode.com/graphql'
 
 htmlstr = '<div>'
-htmlstr += '<style> @page { size: letter landscape; margin: 2cm; }\n * { word-wrap: break-word; } pre { white-space: pre-wrap; } </style>'
-
+htmlstr += '<style> @page { size: letter landscape; margin: 2cm; } * { word-wrap: break-word; } pre { white-space: pre-wrap; } </style>'
 
 def update_question_links(question_links):
-  with open('question_links.txt') as f:
-    links =  f.read()
+    with open('question_links.txt') as f:
+        links = f.read().split('\n')
+    question_links.extend(links)
 
-  links = links.split('\n')
+def get_section(section_text, index):
+    global htmlstr
+    htmlstr += '<div>'
+    htmlstr += f'<h1>{index}: {section_text[1:]}</h1>'
+    htmlstr += '</div>'
+    htmlstr += '<p style="page-break-before: always"></p>'
 
-  for each in links:
-    question_links.append(each)
+def get_question(question_link, index):
+    if not question_link:
+        print(f"Skipping empty line at index {index}")
+        return
 
-def get_section(section_text):
-  global htmlstr
-  htmlstr += '<div>'
-  htmlstr += f'<h1>{section_text[1:]}</h1>'
-  htmlstr += '</div>'
-  htmlstr += '<p style="page-break-before: always" ></p>'
+    try:
+        slug = question_link.split('https://leetcode.com/problems/', 1)[1]
+        baseJSON['variables']['titleSlug'] = slug
+        resp = requests.get(graphQLEndpoint, json=baseJSON)
 
-def get_question(question_link):
-  slug = question_link.split('https://leetcode.com/problems/', 1)[1]
-  baseJSON['variables']['titleSlug'] = slug
-  resp = requests.get(graphQLEndpoint, json=baseJSON)
+        if resp.status_code == 200:
+            response_data = json.loads(resp.text)
+            if 'data' in response_data and response_data['data'] and 'question' in response_data['data']:
+                question = response_data['data']['question']
+                if 'title' in question and 'content' in question:
+                    title = question['title']
+                    content = question['content']
+                else:
+                    title = "No Title Available"
+                    content = "No Content Available"
+                    print(f"Missing 'title' or 'content' in data for {question_link}")
+            else:
+                title = "No Title Available"
+                content = "No Content Available"
+                print(f"No question data available in API response for {question_link}")
+        else:
+            title = "No Title Available"
+            content = "No Content Available"
+            print(f"HTTP Error {resp.status_code} for {question_link}")
 
-  x = json.loads(resp.text, object_hook=lambda d: SimpleNamespace(**d))
+        global htmlstr
+        htmlstr += f'<div><h2>{index}: {title}</h2>{content}</div>'
+        htmlstr += '<p style="page-break-before: always"></p>'
 
-  global htmlstr
-  htmlstr += '<div>'
-  htmlstr += f'<h2>{x.data.question.title}</h2>'
-  htmlstr += x.data.question.content 
-  htmlstr += '</div>'
-  htmlstr += '<p style="page-break-before: always" ></p>'
+    except Exception as e:
+        print(f"Exception processing {question_link}: {e}")
+
 
 def main():
-  question_links = []
-  update_question_links(question_links)
-  for line in question_links:
+    question_links = []
+    update_question_links(question_links)
+    index = 1  # Initialize counter for questions
+
+    if not question_links:
+        print("No questions found in the file.")
+        return
+
+    for line in question_links:
+        if not line.strip():  # Skip empty lines
+            print(f"Skipping empty line at position {index}")
+            continue
+
+        try:
+            if line[0] == '~':
+                get_section(line, index)
+            else:
+                get_question(line, index)
+                index += 1  # Increment the counter for each question
+            print(f"{index}: {line}")
+            print('------------------------------')
+        except Exception as e:
+            print(f"Error processing {line}: {str(e)}")
+
+    global htmlstr
+    htmlstr += '</div>'
+
+    # Try block for PDF generation
     try:
-      if line[0] == '~':
-        get_section(line)
-      else:
-        get_question(line)
-      
-      print(line)
-      print('------------------------------')
-
-    except:
-      continue
-  
-  global htmlstr
-  htmlstr += '</div>'
-  HTML(string=htmlstr).write_pdf('blind_75.pdf')
+        HTML(string=htmlstr).write_pdf('blind_75.pdf')
+        print("PDF generated successfully.")
+    except Exception as e:
+        print(f"Error generating PDF: {str(e)}")
 
 
-if __name__=='__main__':
-  print('\n')
-  main()
-  
+if __name__ == '__main__':
+    print('\n')
+    main()
