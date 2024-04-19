@@ -3,7 +3,7 @@ import json
 from types import SimpleNamespace
 from weasyprint import HTML
 import openai
-openai.api_key = "mykey!"
+openai.api_key = "mykey"
 import re
 import html
 baseJSON = {
@@ -16,8 +16,8 @@ baseJSON = {
 
 graphQLEndpoint = 'https://leetcode.com/graphql'
 
-htmlstr = '<div>'
-htmlstr += '<style> @page { size: letter landscape; margin: 2cm; }\n * { word-wrap: break-word; } pre { white-space: pre-wrap; } </style>'
+# htmlstr = '<div>'
+# htmlstr += '<style> @page { size: A4; margin: 2cm; } * { word-wrap: break-word; } pre { white-space: pre-wrap; } </style>'
 
 questions_details = []  # To store question details
 responses = []  # To store responses
@@ -146,7 +146,8 @@ def generate_responses():
 htmlstr = '''
 <div>
     <style>
-        @page { size: letter landscape; margin: 2cm; }
+        @page { size: A4; margin: 2cm; }
+        body { font-family: Arial, sans-serif; font-size: 10pt; } /* Smaller font size and a more readable font */
         * { word-wrap: break-word; }
         pre { 
             white-space: pre-wrap; 
@@ -154,68 +155,36 @@ htmlstr = '''
             border: 1px solid #e1e1e8; 
             padding: 10px; 
             border-radius: 5px; 
-            font-family: 'Consolas', 'Courier New', monospace;
+            font-family: 'Consolas', 'Courier New', monospace; /* Maintain the monospace font for code blocks */
+            font-size: 10pt; /* Smaller font size for code blocks */
         }
-        h2 { color: navy; }
-        h3 { color: #333; }
-        .question { margin-bottom: 20px; }
-        .response { margin-top: 10px; }
+        h2 { color: navy; font-size: 12pt; } /* Smaller font size for headings */
+        h3 { color: #333; font-size: 11pt; } /* Smaller font size for subheadings */
+        .question, .response { 
+            margin-bottom: 20px; 
+            margin-top: 10px; 
+        }
         .python-code { 
             font-family: 'Consolas', 'Courier New', monospace; 
-            background-color: #f7f7f7; 
+            background-color: #282c34; 
+            color: #abb2bf; 
             border: 1px solid #e1e1e8; 
             padding: 10px; 
             border-radius: 5px; 
+            font-size: 10pt; /* Smaller font size for code snippets */
         }
         .keyword { color: #0077aa; font-weight: bold; } /* Blue for keywords */
         .string { color: #dd1144; } /* Red for strings */
         .comment { color: #999988; font-style: italic; } /* Grey for comments */
+        .builtin { color: #56b6c2; } /* Cyan for built-in functions */
+        .decorator { color: #d19a66; } /* Light orange for decorators */
+        .number { color: #d19a66; } /* Orange for numbers */
     </style>
 </div>
 '''
 
-htmlstr += '''<style>
-    @page { size: letter landscape; margin: 2cm; }
-    * { word-wrap: break-word; }
-    pre {
-        white-space: pre-wrap; 
-        background-color: #282c34; /* Dark background for better contrast */
-        color: #abb2bf; /* Soft white text color */
-        border: 1px solid #e1e1e8; 
-        padding: 10px; 
-        border-radius: 5px; 
-        font-family: 'Consolas', 'Courier New', monospace;
-    }
-    .keyword { color: #c678dd; } /* Light purple for keywords */
-    .builtin { color: #56b6c2; } /* Cyan for built-in functions */
-    .decorator { color: #d19a66; } /* Light orange for decorators */
-    .string { color: #98c379; } /* Green for strings */
-    .comment { color: #5c6370; } /* Grey for comments */
-    .number { color: #d19a66; } /* Orange for numbers */
-</style>'''
-htmlstr +='''<style>
-    @page { size: letter landscape; margin: 2cm; }
-    * { word-wrap: break-word; }
-    pre, .python-code { 
-        white-space: pre-wrap; 
-        background-color: #282c34;  /* Dark background for better contrast */
-        color: #abb2bf;             /* Soft white text color */
-        border: 1px solid #e1e1e8; 
-        padding: 10px; 
-        border-radius: 5px; 
-        font-family: 'Consolas', 'Courier New', monospace;
-    }
-    h2, h3 { color: navy; }
-    .question { margin-bottom: 20px; }
-    .response { margin-top: 10px; }
-    .keyword { color: #c678dd; }  /* Light purple for keywords */
-    .builtin { color: #56b6c2; }  /* Cyan for built-in functions */
-    .decorator { color: #d19a66; }/* Light orange for decorators */
-    .string { color: #98c379; }   /* Green for strings */
-    .comment { color: #5c6370; }  /* Grey for comments */
-    .number { color: #d19a66; }   /* Orange for numbers */
-</style>
-'''
+
+
 def format_response(response_text):
     formatted_response = "<div>"
 
@@ -309,7 +278,7 @@ def main():
         if line[0] == '~':
             get_section(line, index)
         else:
-            if processed_questions >= 13:
+            if processed_questions >= 3:
                 pass  # Stop after processing three questions
             get_question(line, index)
             processed_questions += 1
